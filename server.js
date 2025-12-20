@@ -21,18 +21,29 @@ app.use((req, res, next) => {
   res.setHeader("Content-Security-Policy", "script-src 'self' 'unsafe-eval' 'unsafe-inline';");
   next();
 });
-app.use((req, res, next) => {
-  res.header("Access-Control-Allow-Origin", "http://localhost:3000");
-  res.header("Access-Control-Allow-Methods", "GET,PUT,POST,DELETE");
-  res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
-  res.header("Access-Control-Allow-Credentials", "true");
-  if (req.method === 'OPTIONS') return res.sendStatus(200);
-  next();
-});
+const allowedOrigins = [
+  'http://localhost:3000',                // Dev
+  'https://final-sigma-swart.vercel.app' // Prod
+];
+
+app.use(cors({
+  origin: function(origin, callback) {
+    // allow requests with no origin (like Postman, mobile apps)
+    if (!origin) return callback(null, true);
+
+    if (allowedOrigins.indexOf(origin) === -1) {
+      const msg = `The CORS policy for this site does not allow access from the specified Origin: ${origin}`;
+      return callback(new Error(msg), false);
+    }
+
+    return callback(null, true);
+  },
+  credentials: true, // allow cookies
+}));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
-app.use(require('cors')({ origin: "http://localhost:3000", credentials: true }));
+
 
 // =====================
 // Routes
